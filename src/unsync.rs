@@ -8,10 +8,6 @@ pub struct LazyTry<T, F> {
     init: Cell<Option<F>>,
 }
 
-pub trait FailableFn<T, E> {
-    fn call(self) -> Result<T, E>;
-}
-
 impl<T, E, F: FnOnce() -> Result<T, E>> LazyTry<T, F> {
     pub const fn new(f: F) -> Self {
         Self {
