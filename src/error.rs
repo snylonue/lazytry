@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Error<E> {
@@ -33,7 +33,7 @@ impl<E: Display> Display for Error<E> {
     }
 }
 
-impl<E: std::error::Error> std::error::Error for Error<E> {}
+impl<E: Display + Debug> std::error::Error for Error<E> {}
 
 impl<E> From<E> for Error<E> {
     fn from(e: E) -> Self {
