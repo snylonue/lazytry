@@ -1,7 +1,8 @@
+use crate::error::Error;
 use once_cell::unsync::OnceCell;
 use std::cell::Cell;
 
-use crate::error::Error;
+pub type LazyTryFn<T, E> = LazyTry<T, fn() -> Result<T, E>>;
 
 pub struct LazyTry<T, F> {
     cell: OnceCell<T>,

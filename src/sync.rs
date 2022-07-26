@@ -1,7 +1,8 @@
+use crate::error::Error;
 use once_cell::sync::OnceCell;
 use std::cell::Cell;
 
-use crate::error::Error;
+pub type LazyTryFn<T, E> = LazyTry<T, fn() -> Result<T, E>>;
 
 pub struct LazyTry<T, F> {
     cell: OnceCell<T>,
@@ -36,8 +37,7 @@ mod tests {
 
     #[test]
     fn lazy_try_force() {
-        static LAZY: LazyTry<i32, fn() -> Result<i32, ParseIntError>> =
-            LazyTry::new(|| "1".parse());
+        static LAZY: LazyTryFn<i32, ParseIntError> = LazyTry::new(|| "1".parse());
 
         assert_eq!(LAZY.force().unwrap(), &1);
         assert_eq!(unsafe { *LAZY.force().unwrap_unchecked() }, 1);
@@ -45,8 +45,7 @@ mod tests {
 
     #[test]
     fn lazy_try_force_err() {
-        static LAZY: LazyTry<i32, fn() -> Result<i32, ParseIntError>> =
-            LazyTry::new(|| "a".parse());
+        static LAZY: LazyTryFn<i32, ParseIntError> = LazyTry::new(|| "a".parse());
 
         assert_eq!(
             *LAZY.force().unwrap_err().into_err().unwrap().kind(),
