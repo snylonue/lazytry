@@ -1,6 +1,8 @@
 use once_cell::unsync::OnceCell;
 use std::cell::Cell;
 
+use crate::error::Error;
+
 pub struct LazyTry<T, F> {
     cell: OnceCell<T>,
     init: Cell<Option<F>>,
@@ -20,10 +22,10 @@ impl<T, E, F: FnOnce() -> Result<T, E>> LazyTry<T, F> {
 
     /// # Panic
     /// when `force()` has been called before and retured an `Err`
-    pub fn force(&self) -> Result<&T, E> {
+    pub fn force(&self) -> Result<&T, Error<E>> {
         self.cell.get_or_try_init(|| match self.init.take() {
-            Some(f) => f(),
-            None => panic!("Lazy instance has previously been poisoned"),
+            Some(f) => f().map_err(Error::Failed),
+            None => Err(Error::Poisoned),
         })
     }
 }
@@ -47,8 +49,9 @@ mod tests {
         let lazy: LazyTry<i32, _> = LazyTry::new(|| "a".parse());
 
         assert_eq!(
-            *lazy.force().unwrap_err().kind(),
+            *lazy.force().unwrap_err().into_err().unwrap().kind(),
             IntErrorKind::InvalidDigit
         );
+        assert_eq!(lazy.force().unwrap_err(), Error::Poisoned);
     }
 }
