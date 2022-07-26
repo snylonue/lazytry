@@ -1,18 +1,20 @@
 use once_cell::unsync::OnceCell;
-use std::{cell::Cell, marker::PhantomData};
+use std::cell::Cell;
 
-pub struct LazyTry<T, E = Box<dyn std::error::Error + Sync>, F = fn() -> Result<T, E>> {
+pub struct LazyTry<T, F> {
     cell: OnceCell<T>,
     init: Cell<Option<F>>,
-    _marker: PhantomData<E>,
 }
 
-impl<T, E, F: FnOnce() -> Result<T, E>> LazyTry<T, E, F> {
+pub trait FailableFn<T, E> {
+    fn call(self) -> Result<T, E>;
+}
+
+impl<T, E, F: FnOnce() -> Result<T, E>> LazyTry<T, F> {
     pub const fn new(f: F) -> Self {
         Self {
             cell: OnceCell::new(),
             init: Cell::new(Some(f)),
-            _marker: PhantomData,
         }
     }
 
